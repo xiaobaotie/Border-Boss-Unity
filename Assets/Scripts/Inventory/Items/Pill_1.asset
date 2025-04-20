@@ -1,0 +1,20 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fe14084e44a67bf45a833479fe7f4618, type: 3}
+  m_Name: Pill_1
+  m_EditorClassIdentifier: 
+  itemName: pill
+  description: A pill
+  icon: {fileID: -9177300333841652235, guid: f31e1ad1ce26eee4784dbbe20d30d79a, type: 3}
+  itemType: 0
+  maxStackSize: 1
+  isUsable: 0
