@@ -27,6 +27,11 @@ public class Item : ScriptableObject
     public bool isStackable { get { return maxStackSize > 1; } } // 辅助属性，判断是否可堆叠
     public bool isUsable = false; // 新增：标记物品是否可被“使用” (默认为 false)
 
+    // --- 在这里添加基础价格字段 ---
+    [Tooltip("物品的基础价值")] // 可选的提示信息
+    public int basePrice;
+    // -----------------------------
+
     // --- (可选) 特定类型属性 ---
     // 例如，如果是装备，可以添加:
     // public int attackBonus;

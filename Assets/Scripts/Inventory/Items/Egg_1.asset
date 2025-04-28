@@ -17,3 +17,5 @@ MonoBehaviour:
   icon: {fileID: -4072622106568590741, guid: e906f8ed9b04207458ff7e31b64def49, type: 3}
   itemType: 0
   maxStackSize: 1
+  isUsable: 0
+  basePrice: 1

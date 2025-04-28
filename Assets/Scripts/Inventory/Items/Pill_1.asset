@@ -18,3 +18,4 @@ MonoBehaviour:
   itemType: 0
   maxStackSize: 1
   isUsable: 0
+  basePrice: 10
