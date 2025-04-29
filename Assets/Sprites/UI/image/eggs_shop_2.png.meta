@@ -134,7 +134,8 @@ TextureImporter:
     secondaryTextures: []
     spriteCustomMetadata:
       entries: []
-    nameFileIdTable: {}
+    nameFileIdTable:
+      eggs_shop_2_0: -7732021145136837661
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 
