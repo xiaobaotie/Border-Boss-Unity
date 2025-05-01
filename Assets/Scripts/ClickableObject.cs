@@ -6,6 +6,8 @@ public class ClickableObject : MonoBehaviour
 {
     // 在 Inspector 中将你的“发光”状态 Sprite 拖拽到这里
     public Sprite glowSprite;
+    // 在 Inspector 中将你的鸡蛋商店 UI Panel GameObject 拖拽到这里
+    public GameObject eggShopPanel; // 引用商店面板
 
     private Sprite normalSprite; // 用于存储原始的 Sprite
     private SpriteRenderer spriteRenderer; // 缓存 SpriteRenderer 组件
@@ -31,6 +33,17 @@ public class ClickableObject : MonoBehaviour
         {
              Debug.LogWarning("Glow Sprite 没有在 Inspector 中设置!", this);
         }
+
+        // 确保 eggShopPanel 已设置
+        if (eggShopPanel == null)
+        {
+            Debug.LogError("Egg Shop Panel 没有在 Inspector 中设置!", this);
+        }
+        else
+        {
+            // 确保商店面板初始是隐藏的
+            eggShopPanel.SetActive(false);
+        }
     }
 
     // 鼠标左键在此对象上按下时调用
@@ -43,8 +56,27 @@ public class ClickableObject : MonoBehaviour
             spriteRenderer.sprite = glowSprite;
         }
 
-        // --- 你的商店逻辑可以放在这里或者之后调用 ---
-        Debug.Log(gameObject.name + " 被点击了!");
+        // --- 打开商店面板 ---
+        OpenShopPanel();
+    }
+
+    void OpenShopPanel()
+    {
+        if (eggShopPanel != null)
+        {
+            Debug.Log("打开鸡蛋商店面板...");
+            eggShopPanel.SetActive(true);
+            // 你可能还需要在这里调用面板脚本的方法来初始化显示内容
+            // EggShopPanel panelScript = eggShopPanel.GetComponent<EggShopPanel>();
+            // if (panelScript != null)
+            // {
+            //     panelScript.InitializeShop(); // 假设有这样一个方法
+            // }
+        }
+        else
+        {
+            Debug.LogError("无法打开商店：商店面板未设置！");
+        }
     }
 
     // 鼠标左键在此对象上抬起时调用
