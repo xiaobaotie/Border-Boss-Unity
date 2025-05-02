@@ -1,10 +1,10 @@
 fileFormatVersion: 2
-guid: 0385c69f16534a34e85ad426dcfcb1d2
+guid: a7705b63e6c0d5142b94f171940eb240
 TextureImporter:
   internalIDToNameTable:
   - first:
-      213: 8565639773443079290
-    second: panel_1_0
+      213: 4840735777579599281
+    second: coin_1_0
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
@@ -100,13 +100,13 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: panel_1_0
+      name: coin_1_0
       rect:
         serializedVersion: 2
         x: 0
         y: 0
-        width: 153
-        height: 54
+        width: 277
+        height: 278
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -115,8 +115,8 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: a7c3802cdf34fd670800000000000000
-      internalID: 8565639773443079290
+      spriteID: 1b5082ada8fbd2340800000000000000
+      internalID: 4840735777579599281
       vertices: []
       indices: 
       edges: []
