@@ -56,9 +56,8 @@ public class ClickableObject : MonoBehaviour
             spriteRenderer.sprite = glowSprite;
         }
 
-        // --- 不再在这里打开商店面板 ---
-        // OpenShopPanel();
-        Debug.Log(gameObject.name + " 被按下了!"); // 可以保留或修改日志
+        // --- 打开商店面板 ---
+        OpenShopPanel();
     }
 
     void OpenShopPanel()
@@ -85,23 +84,8 @@ public class ClickableObject : MonoBehaviour
     {
         if (isMouseDownOnObject) // 只有在此对象上按下的才处理抬起
         {
-             isMouseDownOnObject = false; // 重置标记
-
-             // --- 在这里打开商店面板 ---
-
-             // 在打开面板前播放音效
-             if (AudioManager.Instance != null)
-             {
-                 AudioManager.Instance.PlayButtonClickSound();
-             }
-             else
-             {
-                 Debug.LogError("AudioManager instance not found!");
-             }
-
-             OpenShopPanel(); // 调用打开商店面板的方法
-
-             // 切换回普通 Sprite (可以在打开面板后立即切换，或者延迟一小段时间)
+             isMouseDownOnObject = false;
+             // 切换回普通 Sprite
              if (spriteRenderer != null)
              {
                  spriteRenderer.sprite = normalSprite;
@@ -125,10 +109,8 @@ public class ClickableObject : MonoBehaviour
             {
                 spriteRenderer.sprite = normalSprite;
             }
-            // --- 新增 ---
-            // 重置按下标记，这样在对象外部松开鼠标就不会触发 OnMouseUp 中的逻辑了
-            isMouseDownOnObject = false;
-            Debug.Log("鼠标按下状态移出对象范围，取消点击。"); // 可选日志
+            // 注意：这里不重置 isMouseDownOnObject，因为鼠标仍然是按下的，
+            // 只是不在这个对象上了。重置操作留给 OnMouseUp。
         }
         // 可选：恢复悬停效果
     }
