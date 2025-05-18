@@ -1,202 +1,197 @@
 using System.Collections.Generic;
 using UnityEngine;
-using System; // 需要引入 System 命名空间才能使用 Action
+using System; // 如果使用了 Action
 
 public class InventoryManager : MonoBehaviour
 {
-    // --- 单例模式 (可选, 方便全局访问) ---
     public static InventoryManager Instance { get; private set; }
 
-    // --- 事件 ---
-    // 当背包内容发生变化时触发 (UI 可以监听这个事件来更新显示)
-    public event Action OnInventoryChanged;
-
-    // --- 配置 ---
     [Header("Inventory Settings")]
-    [SerializeField] private int capacity = 20; // 背包容量 (格子数量)
+    [SerializeField] private int capacity = 20; // 背包容量
+    public int Capacity => capacity; // <-- 新增: 公共属性以访问 capacity
 
-    // --- 数据 ---
-    [Header("Inventory Data")]
-    // 使用 [SerializeField] 让私有列表在 Inspector 中可见，但不允许外部直接修改列表本身
-    [SerializeField] private List<InventorySlot> slots;
+    public List<InventorySlot> slots = new List<InventorySlot>(); // 背包槽位列表 (这个应该已经是 public 的)
 
-    // --- 属性 ---
-    public int Capacity => capacity;
-    // 提供一个只读的背包格子列表访问器
-    public IReadOnlyList<InventorySlot> Slots => slots.AsReadOnly();
-
-
-    // --- Unity 事件函数 ---
+    public event Action OnInventoryChanged;
 
     private void Awake()
     {
         // --- 单例实现 ---
         if (Instance != null && Instance != this)
         {
-            Debug.LogWarning("Found more than one InventoryManager instance. Destroying the new one.");
+            Debug.LogWarning("InventoryManager: 发现多于一个实例，销毁新的实例。");
             Destroy(gameObject);
             return;
         }
         Instance = this;
-        // (可选) 如果希望背包管理器在切换场景时不被销毁
-        DontDestroyOnLoad(gameObject); // <--- 取消这一行的注释
 
-        // --- 初始化背包格子 ---
-        InitializeInventory();
-    }
+        // --- 跨场景保留 ---
+        DontDestroyOnLoad(gameObject);
+        Debug.Log("InventoryManager: 实例已设置并标记为 DontDestroyOnLoad。");
 
-    // --- 初始化 ---
-
-    private void InitializeInventory()
-    {
-        slots = new List<InventorySlot>(capacity);
-        for (int i = 0; i < capacity; i++)
+        // --- 核心初始化逻辑：优先保留 Inspector 数据 ---
+        // 检查 Inspector 中是否配置了 slots，并且数量是否与 Capacity 匹配
+        if (slots != null && slots.Count > 0 && slots.Count == Capacity) // 使用公共的 Capacity 属性
         {
-            slots.Add(new InventorySlot()); // 添加指定数量的空格子
+            Debug.Log($"InventoryManager: 使用 Inspector 中配置的 {slots.Count} 个槽位。容量: {Capacity}。");
+            for (int i = 0; i < slots.Count; i++)
+            {
+                if (slots[i] == null) // 如果列表中的某个元素是 null (例如，Inspector 中只是一个空条目)
+                {
+                    slots[i] = new InventorySlot(); // 将其初始化为空槽位
+                }
+                // 如果槽位有数量但没有物品数据，这是来自 Inspector 的无效状态，将其清除。
+                else if (slots[i].ItemData == null && slots[i].Quantity > 0)
+                {
+                    Debug.LogWarning($"InventoryManager: 槽位 {i} 有数量 {slots[i].Quantity} 但没有 ItemData。正在清空槽位。");
+                    slots[i].ClearSlot();
+                }
+            }
         }
-        Debug.Log($"Inventory initialized with {capacity} slots.");
+        // 如果配置了 slots 但数量与 Capacity 不符，则进行调整
+        else if (slots != null && slots.Count > 0 && slots.Count != Capacity) // 使用公共的 Capacity 属性
+        {
+            Debug.LogWarning($"InventoryManager: Inspector 中配置了 {slots.Count} 个槽位，但容量是 {Capacity}。正在调整列表大小。");
+            while (slots.Count < Capacity) // 使用公共的 Capacity 属性
+            {
+                slots.Add(new InventorySlot());
+            }
+            if (slots.Count > Capacity) // 使用公共的 Capacity 属性
+            {
+                slots.RemoveRange(Capacity, slots.Count - Capacity); // 使用公共的 Capacity 属性
+            }
+            Debug.Log($"InventoryManager: 槽位已调整。最终数量: {slots.Count}");
+        }
+        else
+        {
+            // Inspector 中没有配置 slots (slots 为 null 或 Count 为 0)，进行程序化初始化
+            Debug.Log("InventoryManager: Inspector 中没有配置槽位或列表为空。将根据容量进行程序化初始化。");
+            InitializeInventory(); // 这会根据 capacity 创建全新的空列表
+        }
+
+        // 确保最终 slots 列表不为 null
+        if (slots == null) {
+            slots = new List<InventorySlot>(); // 预防性措施
+            Debug.LogError("InventoryManager: 在所有初始化检查后，Slots 列表意外为 null！已创建一个新的空列表。");
+        }
+
+        Debug.Log("InventoryManager: Awake 完成。");
+        // OnInventoryChanged?.Invoke(); // 可以在 Start 或完全初始化后调用
     }
 
-    // --- 核心功能 ---
-
-    /// <summary>
-    /// 尝试向背包添加物品
-    /// </summary>
-    /// <param name="itemToAdd">要添加的物品数据</param>
-    /// <param name="amountToAdd">要添加的数量</param>
-    /// <returns>返回 true 如果所有物品都成功添加, false 如果部分或全部未能添加 (背包满)</returns>
-    public bool AddItem(Item itemToAdd, int amountToAdd)
+    public void InitializeInventory()
     {
-        if (itemToAdd == null || amountToAdd <= 0)
+        slots = new List<InventorySlot>(Capacity); // 使用公共的 Capacity 属性
+        for (int i = 0; i < Capacity; i++) // 使用公共的 Capacity 属性
         {
-            Debug.LogWarning("Attempted to add invalid item or zero/negative quantity.");
+            slots.Add(new InventorySlot());
+        }
+        Debug.Log($"InventoryManager: 背包已通过程序以 {Capacity} 个空槽位初始化。"); // 使用公共的 Capacity 属性
+        OnInventoryChanged?.Invoke();
+    }
+
+    public bool AddItem(Item itemToAdd, int quantity = 1)
+    {
+        if (itemToAdd == null || quantity <= 0)
+        {
+            Debug.LogWarning("尝试添加 null 物品或零/负数量。");
             return false;
         }
 
-        Debug.Log($"Attempting to add {amountToAdd} of {itemToAdd.itemName}...");
+        bool itemAdded = false;
 
-        int amountRemaining = amountToAdd;
-
-        // 1. 优先堆叠到现有格子
+        // 1. 尝试堆叠到现有槽位 (仅限可堆叠物品)
         if (itemToAdd.isStackable)
         {
-            foreach (InventorySlot slot in slots)
+            for (int i = 0; i < slots.Count; i++) // 遍历现有槽位
             {
-                if (slot.ItemData == itemToAdd && slot.Quantity < itemToAdd.maxStackSize)
+                if (slots[i].ItemData == itemToAdd) // 检查槽位是否包含相同物品
                 {
-                    int amountAdded = slot.AddQuantity(amountRemaining);
-                    amountRemaining -= amountAdded;
-                    Debug.Log($"Added {amountAdded} to existing stack. Remaining: {amountRemaining}");
-                    if (amountRemaining <= 0)
+                    int addedAmount = slots[i].AddQuantity(quantity); // 尝试添加到堆叠
+                    if (addedAmount > 0)
                     {
-                        OnInventoryChanged?.Invoke(); // 触发事件
-                        Debug.Log($"Successfully added all {amountToAdd} of {itemToAdd.itemName}.");
-                        return true; // 全部添加完毕
+                        quantity -= addedAmount; // 减少剩余数量
+                        itemAdded = true;
+                        Debug.Log($"已将 {addedAmount} 个 {itemToAdd.itemName} 添加到槽位 {i} 的现有堆叠中。剩余待添加: {quantity}");
+                        if (quantity <= 0) break; // 所有物品已添加
                     }
                 }
             }
         }
 
-        // 2. 如果还有剩余，寻找空格子添加
-        if (amountRemaining > 0)
+        // 2. 如果还有剩余数量 (或者物品不可堆叠且第一次添加)，尝试放入新的空槽位
+        if (quantity > 0)
         {
-            foreach (InventorySlot slot in slots)
+            for (int i = 0; i < slots.Count; i++) // 遍历现有槽位
             {
-                if (slot.ItemData == null) // 找到空格子
+                if (slots[i].ItemData == null) // 找到一个空格子
                 {
-                    int amountCanFit = Mathf.Min(amountRemaining, itemToAdd.maxStackSize);
-                    slot.SetSlot(itemToAdd, amountCanFit); // 设置新物品和数量
-                    amountRemaining -= amountCanFit;
-                    Debug.Log($"Placed {amountCanFit} in a new slot. Remaining: {amountRemaining}");
-                    if (amountRemaining <= 0)
-                    {
-                        OnInventoryChanged?.Invoke(); // 触发事件
-                        Debug.Log($"Successfully added all {amountToAdd} of {itemToAdd.itemName}.");
-                        return true; // 全部添加完毕
-                    }
-                    // 如果物品不可堆叠，添加一个就够了
-                    if (!itemToAdd.isStackable)
-                    {
-                         if (amountRemaining > 0) {
-                             // 对于不可堆叠物品，如果还有剩余，继续找下一个空格子
-                             continue;
-                         } else {
-                             OnInventoryChanged?.Invoke();
-                             Debug.Log($"Successfully added all {amountToAdd} of {itemToAdd.itemName} (non-stackable).");
-                             return true;
-                         }
-                    }
+                    int amountForThisSlot = Mathf.Min(quantity, itemToAdd.maxStackSize);
+                    slots[i].SetSlot(itemToAdd, amountForThisSlot);
+                    quantity -= amountForThisSlot; // 减少剩余数量
+                    itemAdded = true;
+                    Debug.Log($"已将 {amountForThisSlot} 个 {itemToAdd.itemName} 放入新槽位 {i}。剩余待添加: {quantity}");
+                    if (quantity <= 0) break; // 所有物品已添加
                 }
             }
         }
 
-        // 3. 如果遍历完所有格子仍有剩余，说明背包满了
-        if (amountRemaining > 0)
+        if (itemAdded)
         {
-            Debug.LogWarning($"Inventory is full. Could not add {amountRemaining} of {itemToAdd.itemName}.");
-            OnInventoryChanged?.Invoke(); // 即使失败了，之前的添加操作也可能改变了背包，触发事件
-            return false; // 未能全部添加
+            OnInventoryChanged?.Invoke();
+            if (quantity > 0)
+            {
+                Debug.LogWarning($"背包已满或无法添加所有物品。{quantity} 个 {itemToAdd.itemName} 未能添加。");
+                return false; // 部分添加成功
+            }
+            return true; // 完全添加成功
         }
-
-        // 理论上不应该执行到这里，但为了编译器满意
-        return true;
+        else
+        {
+            Debug.LogWarning($"背包已满或物品无法添加: {itemToAdd.itemName}");
+            return false; // 未能添加任何物品
+        }
     }
 
-
-    /// <summary>
-    /// 从指定索引的格子移除指定数量的物品
-    /// </summary>
-    /// <param name="slotIndex">格子的索引</param>
-    /// <param name="amountToRemove">要移除的数量</param>
     public void RemoveItem(int slotIndex, int amountToRemove)
     {
         if (slotIndex < 0 || slotIndex >= slots.Count)
         {
-            Debug.LogError($"Invalid slot index: {slotIndex}");
+            Debug.LogError($"无效的槽位索引: {slotIndex}");
             return;
         }
 
         InventorySlot slot = slots[slotIndex];
         if (slot.ItemData == null || slot.Quantity <= 0)
         {
-            Debug.LogWarning($"Slot {slotIndex} is already empty.");
+            Debug.LogWarning($"槽位 {slotIndex} 已经是空的。");
             return;
         }
 
         if (amountToRemove <= 0)
         {
-             Debug.LogWarning("Amount to remove must be positive.");
+             Debug.LogWarning("要移除的数量必须为正数。");
              return;
         }
 
-        Debug.Log($"Removing {amountToRemove} of {slot.ItemData.itemName} from slot {slotIndex}.");
+        Debug.Log($"正在从槽位 {slotIndex} 移除 {amountToRemove} 个 {slot.ItemData.itemName}。");
         slot.RemoveQuantity(amountToRemove);
-        OnInventoryChanged?.Invoke(); // 触发事件
+        OnInventoryChanged?.Invoke();
     }
 
-    /// <summary>
-    /// 完全清空指定索引的格子
-    /// </summary>
-    /// <param name="slotIndex">格子的索引</param>
     public void ClearSlot(int slotIndex)
     {
          if (slotIndex < 0 || slotIndex >= slots.Count)
         {
-            Debug.LogError($"Invalid slot index: {slotIndex}");
+            Debug.LogError($"无效的槽位索引: {slotIndex}");
             return;
         }
         if (slots[slotIndex].ItemData != null)
         {
-            Debug.Log($"Clearing slot {slotIndex} which contained {slots[slotIndex].ItemData.itemName}.");
+            Debug.Log($"正在清空槽位 {slotIndex}，其中包含 {slots[slotIndex].ItemData.itemName}。");
             slots[slotIndex].ClearSlot();
-            OnInventoryChanged?.Invoke(); // 触发事件
+            OnInventoryChanged?.Invoke();
         }
     }
-
-    // --- (未来可能添加的功能) ---
-    // SwapItems(int indexA, int indexB)
-    // FindItem(Item itemToFind) -> returns index or -1
-    // GetTotalQuantity(Item itemToCount)
-    // SortInventory()
-    // ... 等等
+    // ... 其他 InventoryManager 的方法 ...
 }
