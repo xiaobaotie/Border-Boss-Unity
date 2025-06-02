@@ -610,7 +610,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f6ba2bf9b0e03854a9acfc811498c099, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  shopInventory: {fileID: 0}
+  shopInventory: {fileID: 11400000, guid: 8151cad31d0e31d4790b47dad8dcf275, type: 2}
 --- !u!1 &2000401669
 GameObject:
   m_ObjectHideFlags: 0

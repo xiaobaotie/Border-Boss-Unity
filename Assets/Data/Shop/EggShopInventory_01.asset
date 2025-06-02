@@ -12,4 +12,5 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ebf7552bab96f1445b23cda4fdb626aa, type: 3}
   m_Name: EggShopInventory_01
   m_EditorClassIdentifier: 
-  availableItems: []
+  availableItems:
+  - {fileID: 11400000, guid: 528f141e0210e9a48bd1faf4726cd3c7, type: 2}
